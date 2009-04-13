@@ -1,0 +1,197 @@
+<html>
+<head>
+  <title>BibDesk to Word: Integrating References</title>
+  <style type="text/css">
+    p.p1 {text-align: center; font: 18pt Arial; color: #345a8a; }
+    p.p2 {font: 16pt Arial;  color: #345a8a; }
+    tr.theader { background-color: #548dd4; text-align: center; font-style: italic; font-weight: bold;}
+    tr.trow1 { background-color: #dbe5f1; }
+    tr.trow2 { background-color: #a7bfde; }
+  </style>
+</head>
+<body>
+<p class="p1">BibDesk to Word</p>
+
+<hr>
+<p align="center">
+  Copyright (c) 2009, Conan C. Albrecht  
+<br>
+  Home Page: <a href="http://warp.byu.edu/">http://warp.byu.edu/</a>
+<br>
+  Licensed Under the GNU Lesser General Public License
+
+<hr>
+
+<p><b>Important Notes:
+<ul>
+<li>BibDesk to Word requires BibDesk 1.3.20+.  Be sure you update your BibDesk installation.  In addition, I test this tool on Word 2008.  It should work on 2004 as well, but be advised I'm not testing it there.
+<li>The most recent version of BibDesk (0.15) REQUIRES that you update your template files.  Be sure you download the templates as well as the application.
+</ul>
+</b></p>
+
+
+<p class="p2">What is BibDesk to Word?</p>
+BibDesk to Word integrates the popular <a href="http://bibdesk.sourceforge.net/">BibDesk Mac OS X</a> reference manager with Microsoft Word.  As an academic, I write many papers; one of my biggest frustrations is the lack of reference support in Word.  Although commercial reference managers connect to Word nicely, I prefer the minimalistic and useful interface of BibDesk.
+<p>
+Unfortunately, BibDesk itself is only a reference manager.  Including your references in Word is the difficult part.  That's where BibDesk to Word comes in -- it finds all citations in your Word document, grabs the information from BibDesk, and formats both the citations and the references section for you.
+<p>
+BibDesk to Word draws heavily from Colin A. Smith's <a href="http://bibfuse.sourceforge.net">BibFuse</a> application.  Thanks to him and all those involved in BibDesk for excellent work.
+
+<p class="p2">BibDesk to Word Features</p>
+<p><center><img src="screenshot.png" alt=""></center></p>
+<ul>
+<li>A nice user interface for setting formatting options and the desired template.
+<li>Support for many different citation formats, such as numbered, superscripted, author-year, etc.
+<li>Correct formatting for multiple authors and multiple references within a single cite.
+<li>Support for bibtex's \cite, \citep, \citet, and \nocite tags.
+<li>Different sort orders for the bibliography.
+<li>All references and the bibliography are kept in Word fields, which makes them easy to modify and update.
+<li>Formatting is two-directional: citations can be both formatted and unformatted.
+</ul>
+
+<p class="p2">Disclaimer</p>
+BibDesk to Word is open source and free to use.  While I hold the copyright to its code (as defined by the GPL), I make no warranty.  <i>By design, the program is going to modify your Word paper.</i>  If it fails or has bugs, it might do nasty things to your document.  Be sure to save your paper before running BibDesk to Word.  I make no guarantees about what might happen if the worst should occur.  Use it at your own risk.
+
+<p class="p2">Download</p>
+You can download the latest version from one of the following links:
+<ul>
+<li>For the full application (recommended): <a href="http://warp.byu.edu/BibDeskToWord/BibDeskToWord.dmg">http://warp.byu.edu/BibDeskToWord/BibDeskToWord.dmg</a>
+<li>For the script only: <a href="http://warp.byu.edu/BibDeskToWord/BibDeskToWord-Source.zip">http://warp.byu.edu/BibDeskToWord/BibDeskToWord-Source.zip</a>
+</ul>
+<p>
+You also need to get at least three template files.  The following zip file includes several:
+<ul>
+<li><a href="http://warp.byu.edu/BibDeskToWord/BDtW-Templates.zip">http://warp.byu.edu/BibDeskToWord/BDtW-Templates.zip</a>
+</ul>
+
+<p class="p2">Installation</p>
+BibDesk to Word can be installed in two ways: as a full application and as a script.  The full application is the easiest method because it comes as a regular Mac OS X app bundle.  It includes all prerequisites and is the preferred method for most users. To install the full application, perform the following steps:
+
+<ol>
+<li>Download BibDeskToWord.dmg from the application web site.  Your browser should automatically mount the disk image once it downloads.
+<li>Drag the BibDeskToWord application to your Applications directory.
+<li>Unzip the templates in BDtW-Templates.zip to your [home folder]/Library/Application Support/BibDesk/Templates directory.
+<li>Run the program like normal from your Applications directory.  You must also have your Word document and BibDesk library open for the application to work.
+</ol>
+
+Alternatively, you can install the BibDeskToWord.py script directly.  To install the script directly, perform the following steps:
+
+<ol>
+<li>Download BibDeskToWord.py from the application web site.
+<li>Copy the script to your [home folder]/Library/Application Support/BibDesk/Scripts directory.
+<li>Unzip the templates in BDtW-Templates.zip to your [home folder]/Library/Application Support/BibDesk/Templates directory.
+<li>Ensure you have Python 2.4+ and wxPython 2.6+ installed.  Both OS X 10.4 (Tiger) and 10.5 (Leopard) come with these two programs.
+<li>Install the Python "appscript" module (<a href="http://appscript.sourceforge.net/">http://appscript.sourceforge.net/</a>).  Leopard users can simply type "sudo easy_install appscript" at the Terminal.
+<li>Run the program by selecting it from BibDesk's scripts menu.  You must also have your Word document and BibDesk library open for the application to work.
+</ol>
+
+<p class="p2">Usage</p>
+Before you run BibDesk to Word, you need to create a Word document (i.e. your paper) and a BibDesk library.  Once you have these created, drag citations from BibDesk into your Word document.  You should get a tag that looks similar to this:
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\cite{citation key}
+<p>
+This denotes a citation in your text.  While \cite is the most common citation format, you can use several different notations.  See below for examples of the different formats.  The following is a brief description of each:
+<p>
+<center>
+<table cellspacing="0" cellpadding="5" border="1" width="80%">
+    <tr class="theader">
+      <td valign="top" nowrap>Notation</td>
+      <td valign="top">Explanation</td>
+    </tr><tr class="trow1">
+      <td valign="top" nowrap>\cite{citation key}</td>
+      <td valign="top">This is the standard citation format, such as a superscript<sup>1</sup> or author-name (Simpson, 2009).</td>
+    </tr><tr class="trow2">
+      <td valign="top" nowrap>\citep{citation key}</td>
+      <td valign="top">Same as \cite.</td>
+    </tr><tr class="trow1">
+      <td valign="top" nowrap>\citet{citation key}</td>
+      <td valign="top">Use this when the citation is part of the text: Simpson (2009) stated, "..."</td>
+    </tr><tr class="trow2">
+      <td valign="top" nowrap>\nocite{citation key}</td>
+      <td valign="top">This specifies a reference that should be included in the bibliography but has no corresponding citation in the text.<span>  </span>These show up as codes in your document, but they don't print.</td>
+    </tr>
+</table>
+</center>
+
+<p>
+When you are finished sprinkling citations throughout your paper, <i>ensure that your paper is the top-most document in Word and that your library is open in BibDesk.</i> Then run BibDesk to Word. 
+<p>
+The main dialog options are described as follows:
+<p>
+<center>
+<table cellspacing="0" cellpadding="5" border="1" width="80%">
+    <tr class="theader">
+      <td valign="top" nowrap>Option</td>
+      <td valign="top">Explanation</td>
+    </tr><tr class="trow1">
+      <td valign="top" nowrap>BibDesk Document:</td>
+      <td valign="top"       >The BibDesk library you want to pull references from.  You can only work with one library right now.  It must be open in BibDesk for the program to work.</td>
+    </tr><tr class="trow2">
+      <td valign="top" nowrap>Template for \cite:</td>
+      <td valign="top"      >The style of the in-text \cite and \citep citations.  See below for examples of the different formats.</td>
+    </tr><tr class="trow2">
+      <td valign="top" nowrap>Template for \citet:</td>
+      <td valign="top"      >The style of the in-text \citet citations.  See below for examples of the different formats.</td>
+    </tr><tr class="trow1">
+      <td valign="top" nowrap>Sort Order:</td>
+      <td valign="top"       >The order of the bibliography.  Some journals require ordering by appearance in the text and others by alphabetical author name.</td>
+    </tr><tr class="trow2">
+      <td valign="top" nowrap>Template File:</td>
+      <td valign="top"       >The BibDesk template file to use for the bibliography.  See the BibDesk documentation for more information about templates.  The BibFuse site also provides a sample template you may want to start from.</td>
+    </tr>
+    </tr><tr class="trow1">
+      <td valign="top" nowrap>Button: Create/Update Bibliography</td>
+      <td valign="top"       >Creates or updates the citations and bibliography.  This can be run as many time as you like.</td>
+    </tr><tr class="trow2">
+      <td valign="top" nowrap>Button: Remove Bibliography</td>
+      <td valign="top"       >moves all formatting added by BibDesk to Word.  This button reverts back to the simple textual \cite keywords in your text.  It also removes the bibliography from your paper. </td>
+    </tr>
+    </tr>
+</table>
+</center>
+<p>
+
+The bibliography field in your Word document will save your selected options.  They will show up again the next time you run BibDesk To Word (assuming your paper is the top-most Word document).
+
+<p class="p2">Reference Style Examples</p>
+BibDesk to Word mimics some of the behavior of the LaTeX natbib library through the use of \cite, \citep, \citet, and \nocite commands.  It uses regular BibDesk templates to format these citations.  While it comes with several in the BDtW-Templates.zip file, you can easily modify these or create your own to get a custom reference style.  BibDesk's template engine is very powerful and can do about anything you need.  See the BibDesk documentation for more information on creating templates.
+<p>
+IMPORTANT: Note that the numbered styles require the nightly build version of BibDesk.  The current release, 1.3.19, does not support a needed function and won't work.  This will change as soon as a new version is released.  For now, get the nightly build.
+<p>
+The following table shows examples of the different reference styles:
+<p>
+  
+<center>
+<table cellspacing="0" cellpadding="5" border="1">
+    <tr class="theader">
+      <td valign="top">Citation Template Files for \cite and \citet</td>
+      <td valign="top">Donuts are the best treat\cite{simpson09}.</td>
+      <td valign="top">\citet{simpson09} feels donuts are the best treat.</td>
+      <td valign="top">\nocite{simpson09}</td>
+    </tr><tr class="trow1">
+      <td valign="top">BDtW-NumberedSuperscriptCite, BDtW-NumberedSuperscriptCiteT.doc</td>
+      <td valign="top">Donuts are the best treat<sup>1</sup>.</td>
+      <td valign="top"><sup>1</sup>feels that donuts are the best treat.</td>
+      <td valign="top">Only a bibliography entry is made for nocites (only a code is shown but nothing is printed).</td>
+    </tr><tr class="trow1">
+      <td valign="top">BDtW-NumberedBracketedCite.txt, BDtW-NumberedBracketedCiteT.txt</td>
+      <td valign="top">Donuts are the best treat [1].</td>
+      <td valign="top">Simpson [1] feels donuts are the best treat.</td>
+      <td valign="top">Same as above</td>
+    </tr><tr class="trow2">
+      <td valign="top">BDtW-AuthorYearParenCite.txt, BDtW-AuthorYearParenCiteT.txt</td>
+      <td valign="top">Donuts are the best treat (Simpson, 2009).</td>
+      <td valign="top">Simpson (2009) feels donuts are the best treat.</td>
+      <td valign="top">Same as above</td>
+    </tr>
+</table>
+</center>
+<p>
+<p class="p2">If You Like BibDesk to Word</p>
+
+Share it with your friends!  If you are a Python programmer, please upgrade the code and email any changes back to me.  I'll include useful changes in future versions.  
+<p>
+Happy BibDesking!
+
+</body>
+</html>
