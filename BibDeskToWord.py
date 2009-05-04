@@ -196,6 +196,13 @@ class MainFrame(wx.Dialog):
     refsizer2.Add(self.wxcitettemplate, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxcitettemplatebutton = wx.Button(self, label="Choose...")
     refsizer2.Add(self.wxcitettemplatebutton, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+    # ABW: new options for citenp template
+    refsizer2.Add(wx.StaticText(self, label="Template for \\citenp:"), flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+    self.wxcitenptemplate = wx.TextCtrl(self)
+    refsizer2.Add(self.wxcitenptemplate, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+    self.wxcitenptemplatebutton = wx.Button(self, label="Choose...")
+    refsizer2.Add(self.wxcitenptemplatebutton, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+    # /ABW
     refsizer2.Add(wx.StaticText(self, label="Sort Order:"), flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxreforder = wx.Choice(self, choices=[ r[1] for r in REFERENCE_ORDERS ])
     self.wxreforder.SetSelection(0)
@@ -271,6 +278,7 @@ class MainFrame(wx.Dialog):
     self.wxtemplatebutton.Bind(wx.EVT_BUTTON, self.selectBibbibtemplate)
     self.wxciteptemplatebutton.Bind(wx.EVT_BUTTON, self.selectCitePTemplate)
     self.wxcitettemplatebutton.Bind(wx.EVT_BUTTON, self.selectCiteTTemplate)
+    self.wxcitenptemplatebutton.Bind(wx.EVT_BUTTON, self.selectCiteNPTemplate)
 
     
   def close(self, event=None):
@@ -299,12 +307,19 @@ class MainFrame(wx.Dialog):
       self.wxciteptemplate.SetValue(bibtemplate)
     if self.wxcitettemplate.GetValue() == '':  # default the citet to this one as well.
       self.wxcitettemplate.SetValue(bibtemplate)
-      
-    
+    if self.wxcitenptemplate.GetValue() == '':  # default the citenp to this one as well.
+      self.wxcitenptemplate.SetValue(bibtemplate)
+  
   def selectCiteTTemplate(self, event):
     bibtemplate = wx.FileSelector('Please select a template file for \\citet references:', TEMPLATE_DIR, parent=self, wildcard="All Files (*.*)|*.*")
     if bibtemplate != '':
       self.wxcitettemplate.SetValue(bibtemplate)
+  
+    
+  def selectCiteNPTemplate(self, event):
+    bibtemplate = wx.FileSelector('Please select a template file for \\citenp references:', TEMPLATE_DIR, parent=self, wildcard="All Files (*.*)|*.*")
+    if bibtemplate != '':
+      self.wxcitenptemplate.SetValue(bibtemplate)
       
     
   def parseBibliographyOptions(self):
@@ -328,6 +343,8 @@ class MainFrame(wx.Dialog):
                 self.wxciteptemplate.SetValue(value)
               elif key == 'citet_template':
                 self.wxcitettemplate.SetValue(value)
+              elif key == 'citenp_template':
+                self.wxcitenptemplate.SetValue(value)
               elif key == 'ref_order':
                 for i, code in enumerate([ r[0] for r in REFERENCE_ORDERS ]):
                   if code == value:
@@ -360,6 +377,9 @@ class MainFrame(wx.Dialog):
     citettemplate = self.wxcitettemplate.GetValue()
     assert citettemplate != '' and os.path.isfile(citettemplate), 'Please enter a valid \\citet template file name.'
     assert not ':' in citettemplate and not ';' in citettemplate, 'The reference template file name cannot contain a colon or semicolon.'
+    citenptemplate = self.wxcitenptemplate.GetValue()
+    assert citenptemplate != '' and os.path.isfile(citenptemplate), 'Please enter a valid \\citenp template file name.'
+    assert not ':' in citenptemplate and not ';' in citenptemplate, 'The reference template file name cannot contain a colon or semicolon.'
     
     # ensure the Word file is open
     doc = msword.active_document
@@ -371,7 +391,7 @@ class MainFrame(wx.Dialog):
     try:
       # search for both \cite{*} and \bibliography{*} and turn into fields
       progress.Update(0, 'Finding new citations...')
-      for textcommand in [ 'cite', 'citep', 'citet', 'nocite', 'bibliography' ]:
+      for textcommand in [ 'cite', 'citep', 'citet', 'citenp', 'nocite', 'bibliography' ]:
         # set up the search word
         findobject = msword.selection.find_object
         findobject.forward.set(True)
@@ -421,6 +441,7 @@ class MainFrame(wx.Dialog):
       bibdata.append('bib_template:' + bibtemplate)
       bibdata.append('citep_template:' + citeptemplate)
       bibdata.append('citet_template:' + citettemplate)
+      bibdata.append('citenp_template:' + citenptemplate)
       bibdata.append('ref_order:' + REFERENCE_ORDERS[self.wxreforder.GetSelection()][0])
       bibfield.field_code.content.set(' ADDIN bibliography{' + ';'.join(bibdata) + '}')
 
@@ -430,7 +451,7 @@ class MainFrame(wx.Dialog):
       citationsmap = {}  # fast access to citations in document by citekey
       for field in doc.fields.get(timeout=TIMEOUT):
         addin_type = re.split('\W+', field.field_code.content.get().strip())[1]
-        if field.field_type.get() == k.field_addin and addin_type in ('cite', 'citep', 'citet', 'nocite'):
+        if field.field_type.get() == k.field_addin and addin_type in ('cite', 'citep', 'citet', 'citenp', 'nocite'):
           citekeys = re.search('\{(.*)\}', field.field_code.content.get()).group(1)
           for citekey in citekeys.split(','):  # in case there are more than one citation in this \cite
             if not citekey in citationsmap:
@@ -465,14 +486,14 @@ class MainFrame(wx.Dialog):
       for fieldindex, field in enumerate(docfields):
         progress.Update(4, 'Formatting citations (%s/%s)...' % (fieldindex, len(docfields)))
         addin_type = re.split('\W+', field.field_code.content.get().strip())[1]
-        if field.field_type.get() == k.field_addin and addin_type in ('cite', 'citep', 'citet', 'nocite'):
+        if field.field_type.get() == k.field_addin and addin_type in ('cite', 'citep', 'citet', 'citenp', 'nocite'):
           citekeys = re.search('\{(.*)\}', field.field_code.content.get()).group(1)
           cites = []
           for citekey in citekeys.split(','):
             if citationsmap.has_key(citekey):
               cites.append(citationsmap[citekey])
           if len(cites) > 0:
-            template = addin_type == 'citet' and citettemplate or citeptemplate
+            template = ( addin_type == 'citet' and citettemplate ) or ( addin_type == 'citenp' and citenptemplate ) or citeptemplate
             if addin_type == 'nocite':
               field.result_range.content.set('')
               field.result_range.style.set(k.style_normal)
@@ -546,7 +567,7 @@ class MainFrame(wx.Dialog):
       
         # if we are on a cite 
         fieldname = re.split('\W+', field.field_code.content.get().strip())[1]
-        if field.field_type.get() == k.field_addin and fieldname in ('cite', 'citep', 'citet', 'nocite'):
+        if field.field_type.get() == k.field_addin and fieldname in ('cite', 'citep', 'citenp', 'citet', 'nocite'):
           fieldstart = field.field_code.content.start_of_content.get()
           newrange = doc.create_range(start=fieldstart-1, end_=fieldstart-1)
           doc.insert(at=newrange, text='\\' + fieldname + re.search('(\{.*\})', field.field_code.content.get()).group(1))
