@@ -25,7 +25,7 @@
 ################################################################################
 ###  
 ###  Prerequisites:
-###   * A Mac OS X padding.4+ (Tiger and beyond) machine.
+###   * A Mac OS X (Tiger and beyond) machine.
 ###   * MS Word 2008 (probably works on earlier version as well, but not tested)
 ###   * BibDesk from http://bibdesk.sourceforge.net/
 ###   * Appscript from http://appscript.sourceforge.net/  The easiest way to
@@ -34,7 +34,13 @@
 ###        sudo easy_install appscript
 ###
 ###     Python will automatically install it for you.  Alternatively, go to the
-###     web site for downloads.
+###     web site for downloads.  
+###
+###     Programmers: Please note that if you want to build the app bundle
+###     (i.e. compile the program to a Mac application), you cannot install via
+###     easy_install.  Instead, install the source with the following:
+###     "python setup.py install_lib".  The reason for this is that py2app
+###     can't yet work with the eggs that easy_install builds.
 ###
 ###  Installation: 
 ###   * Ensure the system-wide script menu is showing in the menu bar.  If not,
@@ -62,7 +68,7 @@
 ###     references are magically transformed!
 ###
 ################################################################################
-VERSION = 0.16
+VERSION = 0.17
 #  
 #  2008-02-06  Added a 10 min timeout to appscript calls that might take a long time.
 #  2008-02-04  Various bug fixes.  Thanks to Christian Brodbeck for the code change.
@@ -76,18 +82,14 @@ VERSION = 0.16
 #              Made in-text citations format better.
 #  2008-12-13  First version of the program.
 #  2009-04-08  Fixed a bug in the numbered references where it said 1 for every item.
+#  2009-08-10  Added sorting of citations when using multiple numbered references,
+#              such as in [9, 17, 20] instead of [17, 9, 20].
+#              Commented out setting of style to k.style_normal because it was affecting
+#              the entire paragraph (beyond the citation text).
 #  
 ################################################################################
 
 import re, os, os.path, sys, tempfile, traceback, time
-
-# Set default template selections. Note that there's no default for the BibDesk Document--that automatically gets the frontmost window.
-defaults = { 'citep template': u'/Users/andy/Library/Application Support/BibDesk/Templates/BDtW-AuthorYearParenCite.txt',
-                'citet template': u'/Users/andy/Library/Application Support/BibDesk/Templates/BDtW-AuthorYearParenCiteT.txt',
-                'citenp template': u'/Users/andy/Library/Application Support/BibDesk/Templates/BDtW-AuthorYearParenCiteNP.txt',
-                'bibliography template': u'/Users/andy/Library/Application Support/BibDesk/Templates/BDtW-BibliographyTemplate.doc',
-                'sort order': 'LastName',
-                }
 
 
 ################################################################################
@@ -194,25 +196,16 @@ class MainFrame(wx.Dialog):
     refsizer2 = wx.FlexGridSizer(3, 3, padding, padding)
     refsizer2.AddGrowableCol(1)
     refsizer1.Add(refsizer2, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-    
     refsizer2.Add(wx.StaticText(self, label="Template for \\cite:"), flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxciteptemplate = wx.TextCtrl(self)
     refsizer2.Add(self.wxciteptemplate, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxciteptemplatebutton = wx.Button(self, label="Choose...")
     refsizer2.Add(self.wxciteptemplatebutton, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-    
     refsizer2.Add(wx.StaticText(self, label="Template for \\citet:"), flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxcitettemplate = wx.TextCtrl(self)
     refsizer2.Add(self.wxcitettemplate, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxcitettemplatebutton = wx.Button(self, label="Choose...")
     refsizer2.Add(self.wxcitettemplatebutton, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-    
-    refsizer2.Add(wx.StaticText(self, label="Template for \\citenp:"), flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-    self.wxcitenptemplate = wx.TextCtrl(self)
-    refsizer2.Add(self.wxcitenptemplate, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-    self.wxcitenptemplatebutton = wx.Button(self, label="Choose...")
-    refsizer2.Add(self.wxcitenptemplatebutton, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-    
     refsizer2.Add(wx.StaticText(self, label="Sort Order:"), flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxreforder = wx.Choice(self, choices=[ r[1] for r in REFERENCE_ORDERS ])
     self.wxreforder.SetSelection(0)
@@ -276,15 +269,6 @@ class MainFrame(wx.Dialog):
     docnames = [ d.name.get() for d in bibdesk.documents.get() ]
     if len(docnames) == 1:
       self.wxbibfile.SetLabel(docnames[0])
-      
-    # set default options defined in the 'defaults' dictionary
-    self.wxciteptemplate.SetValue( defaults['citep template'] )
-    self.wxcitettemplate.SetValue( defaults['citet template'] )
-    self.wxcitenptemplate.SetValue( defaults['citenp template'] )
-    self.wxbibtemplate.SetValue( defaults['bibliography template'] )
-    for i, code in enumerate([ r[0] for r in REFERENCE_ORDERS ]):
-        if code == defaults['sort order']:
-            self.wxreforder.SetSelection(i)
     
     # set up the options with the default from the word document
     self.parseBibliographyOptions()
@@ -297,7 +281,6 @@ class MainFrame(wx.Dialog):
     self.wxtemplatebutton.Bind(wx.EVT_BUTTON, self.selectBibbibtemplate)
     self.wxciteptemplatebutton.Bind(wx.EVT_BUTTON, self.selectCitePTemplate)
     self.wxcitettemplatebutton.Bind(wx.EVT_BUTTON, self.selectCiteTTemplate)
-    self.wxcitenptemplatebutton.Bind(wx.EVT_BUTTON, self.selectCiteNPTemplate)
 
     
   def close(self, event=None):
@@ -326,19 +309,12 @@ class MainFrame(wx.Dialog):
       self.wxciteptemplate.SetValue(bibtemplate)
     if self.wxcitettemplate.GetValue() == '':  # default the citet to this one as well.
       self.wxcitettemplate.SetValue(bibtemplate)
-    if self.wxcitenptemplate.GetValue() == '':  # default the citenp to this one as well.
-      self.wxcitenptemplate.SetValue(bibtemplate)
-  
+      
+    
   def selectCiteTTemplate(self, event):
     bibtemplate = wx.FileSelector('Please select a template file for \\citet references:', TEMPLATE_DIR, parent=self, wildcard="All Files (*.*)|*.*")
     if bibtemplate != '':
       self.wxcitettemplate.SetValue(bibtemplate)
-  
-    
-  def selectCiteNPTemplate(self, event):
-    bibtemplate = wx.FileSelector('Please select a template file for \\citenp references:', TEMPLATE_DIR, parent=self, wildcard="All Files (*.*)|*.*")
-    if bibtemplate != '':
-      self.wxcitenptemplate.SetValue(bibtemplate)
       
     
   def parseBibliographyOptions(self):
@@ -362,8 +338,6 @@ class MainFrame(wx.Dialog):
                 self.wxciteptemplate.SetValue(value)
               elif key == 'citet_template':
                 self.wxcitettemplate.SetValue(value)
-              elif key == 'citenp_template':
-                self.wxcitenptemplate.SetValue(value)
               elif key == 'ref_order':
                 for i, code in enumerate([ r[0] for r in REFERENCE_ORDERS ]):
                   if code == value:
@@ -396,9 +370,6 @@ class MainFrame(wx.Dialog):
     citettemplate = self.wxcitettemplate.GetValue()
     assert citettemplate != '' and os.path.isfile(citettemplate), 'Please enter a valid \\citet template file name.'
     assert not ':' in citettemplate and not ';' in citettemplate, 'The reference template file name cannot contain a colon or semicolon.'
-    citenptemplate = self.wxcitenptemplate.GetValue()
-    assert citenptemplate != '' and os.path.isfile(citenptemplate), 'Please enter a valid \\citenp template file name.'
-    assert not ':' in citenptemplate and not ';' in citenptemplate, 'The reference template file name cannot contain a colon or semicolon.'
     
     # ensure the Word file is open
     doc = msword.active_document
@@ -410,7 +381,7 @@ class MainFrame(wx.Dialog):
     try:
       # search for both \cite{*} and \bibliography{*} and turn into fields
       progress.Update(0, 'Finding new citations...')
-      for textcommand in [ 'cite', 'citep', 'citet', 'citenp', 'nocite', 'bibliography' ]:
+      for textcommand in [ 'cite', 'citep', 'citet', 'nocite', 'bibliography' ]:
         # set up the search word
         findobject = msword.selection.find_object
         findobject.forward.set(True)
@@ -460,7 +431,6 @@ class MainFrame(wx.Dialog):
       bibdata.append('bib_template:' + bibtemplate)
       bibdata.append('citep_template:' + citeptemplate)
       bibdata.append('citet_template:' + citettemplate)
-      bibdata.append('citenp_template:' + citenptemplate)
       bibdata.append('ref_order:' + REFERENCE_ORDERS[self.wxreforder.GetSelection()][0])
       bibfield.field_code.content.set(' ADDIN bibliography{' + ';'.join(bibdata) + '}')
 
@@ -470,7 +440,7 @@ class MainFrame(wx.Dialog):
       citationsmap = {}  # fast access to citations in document by citekey
       for field in doc.fields.get(timeout=TIMEOUT):
         addin_type = re.split('\W+', field.field_code.content.get().strip())[1]
-        if field.field_type.get() == k.field_addin and addin_type in ('cite', 'citep', 'citet', 'citenp', 'nocite'):
+        if field.field_type.get() == k.field_addin and addin_type in ('cite', 'citep', 'citet', 'nocite'):
           citekeys = re.search('\{(.*)\}', field.field_code.content.get()).group(1)
           for citekey in citekeys.split(','):  # in case there are more than one citation in this \cite
             if not citekey in citationsmap:
@@ -505,23 +475,26 @@ class MainFrame(wx.Dialog):
       for fieldindex, field in enumerate(docfields):
         progress.Update(4, 'Formatting citations (%s/%s)...' % (fieldindex, len(docfields)))
         addin_type = re.split('\W+', field.field_code.content.get().strip())[1]
-        if field.field_type.get() == k.field_addin and addin_type in ('cite', 'citep', 'citet', 'citenp', 'nocite'):
+        if field.field_type.get() == k.field_addin and addin_type in ('cite', 'citep', 'citet', 'nocite'):
           citekeys = re.search('\{(.*)\}', field.field_code.content.get()).group(1)
           cites = []
           for citekey in citekeys.split(','):
             if citationsmap.has_key(citekey):
               cites.append(citationsmap[citekey])
           if len(cites) > 0:
-            template = ( addin_type == 'citet' and citettemplate ) or ( addin_type == 'citenp' and citenptemplate ) or citeptemplate
+            # sort the cites numerically so they appear in order of the bibliography
+            cites.sort(lambda x, y: cmp(x.citenum, y.citenum))
+            # format the citation depending on the type
+            template = addin_type == 'citet' and citettemplate or citeptemplate
             if addin_type == 'nocite':
               field.result_range.content.set('')
-              field.result_range.style.set(k.style_normal)
+#              field.result_range.style.set(k.style_normal)
               field.show_codes.set(True)
 
             elif os.path.splitext(template)[1].lower() == '.txt':  # if a text template, just have BibDesk give us the references
               citetext = bibdoc.templated_text(using=mactypes.File(template), in_=[ c.publication for c in cites ]).splitlines()
               field.result_range.content.set(citetext)
-              field.result_range.style.set(k.style_normal)
+#              field.result_range.style.set(k.style_normal)
               field.show_codes.set(False)  # show the bibliography text
               # convert the item index (which starts at 1 for each cite) to our actual bibliography indices, if itemIndex was used in the template
               for i, c in enumerate(cites):
@@ -586,7 +559,7 @@ class MainFrame(wx.Dialog):
       
         # if we are on a cite 
         fieldname = re.split('\W+', field.field_code.content.get().strip())[1]
-        if field.field_type.get() == k.field_addin and fieldname in ('cite', 'citep', 'citenp', 'citet', 'nocite'):
+        if field.field_type.get() == k.field_addin and fieldname in ('cite', 'citep', 'citet', 'nocite'):
           fieldstart = field.field_code.content.start_of_content.get()
           newrange = doc.create_range(start=fieldstart-1, end_=fieldstart-1)
           doc.insert(at=newrange, text='\\' + fieldname + re.search('(\{.*\})', field.field_code.content.get()).group(1))
