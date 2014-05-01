@@ -10,7 +10,7 @@ MS Word bibliography management using [BibDesk](http://bibdesk.sourceforge.net).
 
 ## Installation
 
-There are a couple ways to install including running as a python script or building a local OS X application bundle. all of which are documented in [ReadMe.html](ReadMe.html). The binary app is no longer available through the original host.
+There are a couple ways to install including running as a python script or building a local OS X application bundle. All of which are documented in [ReadMe.html](ReadMe.html). The binary app is no longer available through the original host.
 
 ### Building as an app
 This version tested successfully with Office 2011 (v14.1.4) and BibDesk 1.6.2.
