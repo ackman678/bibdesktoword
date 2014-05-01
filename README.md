@@ -60,8 +60,8 @@ Original by Conan C. Albrecht at warp.byu.edu/BibDeskToWord
 * Andrew Wallace forked from v0.16 original source and added citenp citations
 * James Ackman forked from v0.17 original BibDeskToWork-Source on 2014-05-01, wrote README.md, added new screenshots, edited version info in ReadMe.html
 	* Tested compilation of v0.17 source.
-	* Merged and edited the v0.16 fork template file defaults into v0.17 master 2014-05-01
-		```git difftool -t opendiff v0.16:BibDeskToWord.py master:BibDeskToWord.py```
+	* Merged and edited the v0.16 fork template file defaults into v0.17 master 2014-05-01  
+```git difftool -t opendiff v0.16:BibDeskToWord.py master:BibDeskToWord.py```
 	* Added BDtW-Templates.zip to root dir
 
 ## License
