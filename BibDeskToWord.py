@@ -91,6 +91,13 @@ VERSION = 0.17
 
 import re, os, os.path, sys, tempfile, traceback, time
 
+# Set default template selections. Note that there's no default for the BibDesk Document--that automatically gets the frontmost window.
+defaults = { 'citep template': u'/Users/username/Library/Application Support/BibDesk/Templates/BDtW-AuthorYearParenCite.txt',
+                'citet template': u'/Users/username/Library/Application Support/BibDesk/Templates/BDtW-AuthorYearParenCiteT.txt',
+                'bibliography template': u'/Users/username/Library/Application Support/BibDesk/Templates/BDtW-BibliographyTemplate.doc',
+                'sort order': 'LastName',
+                }
+
 
 ################################################################################
 ###   Ensure we have wx available
@@ -196,11 +203,13 @@ class MainFrame(wx.Dialog):
     refsizer2 = wx.FlexGridSizer(3, 3, padding, padding)
     refsizer2.AddGrowableCol(1)
     refsizer1.Add(refsizer2, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+    
     refsizer2.Add(wx.StaticText(self, label="Template for \\cite:"), flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxciteptemplate = wx.TextCtrl(self)
     refsizer2.Add(self.wxciteptemplate, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxciteptemplatebutton = wx.Button(self, label="Choose...")
     refsizer2.Add(self.wxciteptemplatebutton, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+    
     refsizer2.Add(wx.StaticText(self, label="Template for \\citet:"), flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
     self.wxcitettemplate = wx.TextCtrl(self)
     refsizer2.Add(self.wxcitettemplate, flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_VERTICAL)
@@ -269,6 +278,14 @@ class MainFrame(wx.Dialog):
     docnames = [ d.name.get() for d in bibdesk.documents.get() ]
     if len(docnames) == 1:
       self.wxbibfile.SetLabel(docnames[0])
+      
+    # set default options defined in the 'defaults' dictionary
+    self.wxciteptemplate.SetValue( defaults['citep template'] )
+    self.wxcitettemplate.SetValue( defaults['citet template'] )
+    self.wxbibtemplate.SetValue( defaults['bibliography template'] )
+    for i, code in enumerate([ r[0] for r in REFERENCE_ORDERS ]):
+        if code == defaults['sort order']:
+            self.wxreforder.SetSelection(i)
     
     # set up the options with the default from the word document
     self.parseBibliographyOptions()

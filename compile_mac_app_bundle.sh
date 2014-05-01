@@ -24,7 +24,7 @@
 # clean up any remaining files from last time
 /bin/rm -f BibDeskToWord.dmg
 /bin/rm -f BibDeskToWord-Source.zip
-/bin/rm -f BDtW-Templates.zip
+# /bin/rm -f BDtW-Templates.zip
 /bin/rm -rf build
 /bin/rm -rf dist
 
@@ -36,7 +36,7 @@ hdiutil create -fs HFS+ -volname "BibDeskToWord" -srcfolder dist "BibDeskToWord.
 zip BibDeskToWord-Source.zip BibDeskToWord.py ReadMe.html screenshot.png setup.py compile_mac_app_bundle.sh
 
 # zip up the templates
-zip BDtW-Templates.zip BDtW*
+# zip BDtW-Templates.zip BDtW*
 
 # clean up the temporary files
 /bin/rm -rf build
